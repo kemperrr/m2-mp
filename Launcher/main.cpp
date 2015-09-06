@@ -40,10 +40,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 #ifndef _DEBUG
 	// Create the updater instance
-	pUpdater = new CUpdate;
+	/*pUpdater = new CUpdate;
 	
 	// Check for updates
-	pUpdater->CheckForUpdates ();
+	pUpdater->CheckForUpdates();*/
 #endif
 
 	//

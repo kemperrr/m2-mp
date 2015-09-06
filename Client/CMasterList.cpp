@@ -9,16 +9,9 @@
 
 #include "StdInc.h"
 
-#define LEGACY_MASTER_SERVER 1
-#ifdef LEGACY_MASTER_SERVER
-	#define MASTER_SERVER_HOST "m2-rp.ru"
-	#define MASTER_SERVER_NONE_URL_PATH "/list.php"
-	#define MASTER_SERVER_HOSTED_URL_PATH "/hosted/list.php"
-#else
-	#define MASTER_SERVER_HOST "m2-rp.ru"
-	#define MASTER_SERVER_NONE_URL_PATH "/list.php"
-	#define MASTER_SERVER_HOSTED_URL_PATH "/index.php?hosted"
-#endif
+#define MASTER_SERVER_HOST "master.m2-multiplayer.com"
+#define MASTER_SERVER_NONE_URL_PATH "/list.php"
+#define MASTER_SERVER_HOSTED_URL_PATH "/list.php?hosted"
 
 extern CCore *pCore;
 
