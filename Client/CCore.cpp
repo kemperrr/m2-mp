@@ -144,12 +144,15 @@ bool CCore::Initialise( void )
 
 	// Initialise the offsets
 	COffsets::Initialise( 0, m_uiBaseAddress );
+	CLogFile::Printf ("Coffsets initialise");
 
 	// Apply the patches
 	CPatches::Initialise ();
+	CLogFile::Printf ("CPatches initialise");
 
 	// Initialise lua
 	CLua::Initialise ();
+	CLogFile::Printf ("CLua initialise");
 
 	// Create the graphics instance
 	m_pGraphics = new CGraphics;

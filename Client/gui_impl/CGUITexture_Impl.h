@@ -22,7 +22,7 @@ public:
 						CGUITexture_Impl			( class CGUI_Impl * pGUI );
 						~CGUITexture_Impl			( void );
 
-	bool				LoadFromFile				( String strFile );
+	bool				LoadFromFile				( String strFile);
 	void				LoadFromMemory				( const void * pBuffer, unsigned int uiWidth, unsigned int uiHeight );
 	void				Clear						( void );
 
