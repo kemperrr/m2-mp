@@ -38,6 +38,8 @@ private:
 	String					m_strInput;
 	bool					m_bInputVisible;
 	bool					m_bOldLockState;
+	int						m_iTextCursorPosition;
+	int						m_iCountSelectedChars;
 
 	// History
 	int						m_iTotalHistory;
@@ -67,13 +69,15 @@ public:
 	void					SetInputVisible					( bool bVisible ) { m_bInputVisible = bVisible; }
 	bool					IsInputVisible					( void ) { return m_bInputVisible; }
 
-	void					SetInputText					( const char * szText ) { m_strInput.Set( szText ); }
+	void					SetInputText					( const char * szText );
 	const char				* GetInputText					( void ) { return m_strInput.Get(); }
 
 	void					Clear							( void );
 	void					ClearHistory					( void );
 
-	void					ClearInputText					( void ) { m_strInput.clear(); }
+	void					ClearInputText					( void );
+
+	bool					ClearSelectText					( void );
 
 	void					SetFont							( const char * szFont ) { m_strFont.Set( szFont ); }
 	const char				* GetFont						( void ) { return m_strFont.Get(); }

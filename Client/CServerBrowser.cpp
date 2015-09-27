@@ -56,7 +56,7 @@ bool CServerBrowser::Event_QuickConnectCancelClick ( CGUIElement_Impl * pElement
 bool CServerBrowser::Event_QuickConnectInputFocus ( CGUIElement_Impl * pElement )
 {
 	// Reset the element text
-	pElement->SetText ( "" );
+	//pElement->SetText ( "" );
 	return true;
 }
 
