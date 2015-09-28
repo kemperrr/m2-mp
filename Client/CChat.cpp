@@ -544,6 +544,10 @@ bool CChat::HandleKeyDown( CGUIKeyEventArgs keyArgs )
 				{
 					m_iCountSelectedChars = m_iTextCursorPosition - m_strInput.GetLength();
 				}
+				else
+				{
+					m_iCountSelectedChars = 0;
+				}
 				// Move cursor to end
 				m_iTextCursorPosition = m_strInput.GetLength();
 			}
@@ -558,6 +562,10 @@ bool CChat::HandleKeyDown( CGUIKeyEventArgs keyArgs )
 				if( keyArgs.sysKeys & CEGUI::SystemKey::Shift )
 				{
 					m_iCountSelectedChars = m_iTextCursorPosition;
+				}
+				else
+				{
+					m_iCountSelectedChars = 0;
 				}
 				// Move cursor to start
 				m_iTextCursorPosition = 0;

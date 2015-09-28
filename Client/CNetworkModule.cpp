@@ -88,6 +88,10 @@ eNetworkResponse CNetworkModule::Connect( String strHost, unsigned short usPort,
 	// Store the connection info
 	SetLastConnection( strHost, usPort, strPass );
 
+#ifdef DEBUG
+	CLogFile::Printf( "Connection to %s:%d, password: %s", strHost.Get(), usPort, strPass.Get() );
+#endif
+
 	// Attempt to connect
 	int iConnectionResult = m_pRakPeer->Connect( strHost.Get(), usPort, strPass.Get(), strPass.GetLength() );
 
@@ -95,7 +99,7 @@ eNetworkResponse CNetworkModule::Connect( String strHost, unsigned short usPort,
 	SetNetworkState( NETSTATE_CONNECTING );
 
 	// Did we fail to connect?
-	if( iConnectionResult != 0 )
+	if( iConnectionResult != RakNet::INVALID_PARAMETER )
 	{
 		// Set the network state
 		SetNetworkState( NETSTATE_NONE );

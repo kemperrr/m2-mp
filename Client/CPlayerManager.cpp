@@ -14,6 +14,7 @@ extern	CCore				* pCore;
 CPlayerManager::CPlayerManager( void )
 {
 	DEBUG_TRACE("CPlayerManager::CPlayerManager");
+	CLogFile::Printf("CPlayerManager::CPlayerManager");
 
 	// Create the localplayer instance
 	m_pLocalPlayer = new CLocalPlayer;
@@ -25,6 +26,7 @@ CPlayerManager::CPlayerManager( void )
 CPlayerManager::~CPlayerManager( void )
 {
 	DEBUG_TRACE("CPlayerManager::~CPlayerManager");
+	CLogFile::Printf("CPlayerManager::~CPlayerManager");
 
 	// Delete the localplayer instance
 	SAFE_DELETE( m_pLocalPlayer );
