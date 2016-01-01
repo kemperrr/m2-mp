@@ -31,10 +31,14 @@ CGraphics::CGraphics( void )
 	m_pPixelTexture = NULL;
 
 	// Install the direct x hook
-	CDirect3D9Hook::Install ();
+	if ( CDirect3D9Hook::Install () )
+		CLogFile::Printf ("CDirect3D9Hook did install");
+	else
+		CLogFile::Printf ("CDirect3D9Hook didn't install");
 
 	// Install the direct input 8 hook
 	CDirectInput8Hook::Install ();
+	//CLogFile::Printf ("CDirectInput8Hook install");
 }
 
 CGraphics::~CGraphics( void )
@@ -63,7 +67,7 @@ void CGraphics::Initialise( IDirect3DDevice9 * pDevice )
 		// Load the font's
 		if( !LoadFonts() )
 		{
-			CLogFile::Printf( "CGraphics::LoadFonts() - Failed to load default fonts." );
+			CLogFile ::Printf( "CGraphics::LoadFonts() - Failed to load default fonts." );
 			TerminateProcess( GetCurrentProcess(), 0 );
 		}
 

@@ -28,6 +28,8 @@ CChat::CChat( CGUI_Impl * pGUI, float fX, float fY )
 	memset( m_szCurrentHistory, 0, sizeof(m_szCurrentHistory) );
 	memset( m_szHistory, 0, sizeof(m_szHistory) );
 	m_iTotalHistory = 0;
+	m_iTextCursorPosition = 0;
+	m_iCountSelectedChars = 0;
 	m_iCurrentHistory = -1;
 	m_bInputVisible = false;
 	m_bOldLockState = false;
@@ -153,9 +155,54 @@ void CChat::Render( void )
 		// Calculate the input render position
 		float fInputY = (m_fY + (16.0f * MAX_CHAT_LINES) + 10.0f);
 
-		// Draw the input message
-		pGraphics->DrawText( m_fX, fInputY, D3DCOLOR_ARGB( 255, 255, 255, 255 ), 1.0f, "tahoma-bold", true, "Say: %s", m_strInput.Get() );
+		// Offset text cursor
+		int iOffsetCursor = strlen("Say: ");
+
+		// String for printing
+		String strSay = String( "%s%s", "Say: ", m_strInput.Get() );
+
+		//Is text select?
+		if( m_iCountSelectedChars != 0 )
+		{
+			// Start select position
+			int iStartPos = iOffsetCursor + m_iTextCursorPosition + ( m_iCountSelectedChars > 0 ? 0 : m_iCountSelectedChars);
+			// End select position
+			int iEndPos	  = iOffsetCursor + m_iTextCursorPosition + ( m_iCountSelectedChars > 0 ? m_iCountSelectedChars : 0 );
+			
+			// Split string
+			String strFirst		= strSay.substr(0, iStartPos);
+			String strMiddle	= strSay.substr(iStartPos, abs(m_iCountSelectedChars) );
+			String strLast		= strSay.substr(iEndPos, strSay.GetLength() - iEndPos);
+
+			// Substrings width
+			float fStrFirstWidth = pGraphics->GetTextWidth(strFirst.Get(), 1.0f, "tahoma-bold");
+			float fStrMiddleWidth = pGraphics->GetTextWidth(strMiddle.Get(), 1.0f, "tahoma-bold");
+
+			// Draw first substring
+			pGraphics->DrawText( m_fX, fInputY, D3DCOLOR_ARGB( 255, 255, 255, 255 ), 1.0f, "tahoma-bold", true, strFirst.Get() );
+
+			// Draw select substring
+			pGraphics->DrawBox(m_fX + fStrFirstWidth, fInputY, fStrMiddleWidth, 16.0f, D3DCOLOR_ARGB( 64, 0, 0, 255 ) );
+			pGraphics->DrawText(m_fX + fStrFirstWidth, fInputY, D3DCOLOR_ARGB( 255, 128, 128, 128 ), 1.0f, "tahoma-bold", true, strMiddle.Get() );
+
+			// Draw last substring
+			float strLastStart_x = m_fX + fStrFirstWidth + fStrMiddleWidth;
+			pGraphics->DrawText(strLastStart_x, fInputY, D3DCOLOR_ARGB( 255, 255, 255, 255 ), 1.0f, "tahoma-bold", true, strLast.Get() );
+		}
+		else
+		{
+			// Draw the input message
+			strSay.Insert(m_iTextCursorPosition + iOffsetCursor, '|');
+			pGraphics->DrawText( m_fX, fInputY, D3DCOLOR_ARGB( 255, 255, 255, 255 ), 1.0f, "tahoma-bold", true, strSay.Get() );
+		}
 	}
+}
+
+void CChat::SetInputText( const char * szText )
+{ 
+	m_strInput.Set( szText ); 
+	m_iTextCursorPosition = m_strInput.GetLength(); 
+	m_iCountSelectedChars = 0;
 }
 
 void CChat::Clear( void )
@@ -175,6 +222,28 @@ void CChat::ClearHistory( void )
 	// Reset
 	m_iTotalHistory = 0;
 	m_iCurrentHistory = -1;
+}
+
+void CChat::ClearInputText( void )
+{ 
+	m_strInput.clear(); 
+	m_iTextCursorPosition = 0;
+	m_iCountSelectedChars = 0;
+}
+
+bool CChat::ClearSelectText( void )
+{
+	// Is text select?
+	if( m_iCountSelectedChars != 0 )
+	{
+		int start = m_iTextCursorPosition + ( m_iCountSelectedChars > 0 ? 0 :m_iCountSelectedChars );
+
+		m_strInput.Erase( start, abs(m_iCountSelectedChars) );
+		m_iTextCursorPosition = start;
+		m_iCountSelectedChars = 0;
+		return true;
+	}
+	return false;
 }
 
 float CChat::GetFontHeight( void )
@@ -352,11 +421,15 @@ bool CChat::HandleKeyInput( CGUIKeyEventArgs keyArgs )
 			// Get the input text length
 			size_t sLen = m_strInput.GetLength();
 
+			// Do we have select text?
+			if( ClearSelectText() )
+				break;
+
 			// Do we have any input?
-			if( sLen > 0 )
+			if( sLen > 0 && m_iTextCursorPosition > 0 )
 			{
-				// Resize the input
-				m_strInput.Resize( sLen - 1 );
+				--m_iTextCursorPosition;
+				m_strInput.Erase( m_iTextCursorPosition, 1 );
 			}
 			break;
 		}
@@ -366,11 +439,25 @@ bool CChat::HandleKeyInput( CGUIKeyEventArgs keyArgs )
 			// Get the current input len
 			size_t sInputLen = m_strInput.GetLength();
 
+			// Clear select text
+			ClearSelectText();
+
 			// Have we got any room left?
 			if( sInputLen < MAX_MESSAGE_LEN )
 			{
-				// Add the character to the end of the input text
-				m_strInput += static_cast< char >( keyArgs.codepoint );
+				// Text cursor doesn't last 
+				if( m_iTextCursorPosition < sInputLen )
+				{
+					//char cInputedChar = static_cast< char >(keyArgs.codepoint);
+					m_strInput.Insert (m_iTextCursorPosition,  static_cast< char >(keyArgs.codepoint) );
+					++m_iTextCursorPosition;
+				}
+				else
+				{
+					// Add the character to the end of the input text
+					m_strInput += static_cast< char >( keyArgs.codepoint );
+					++m_iTextCursorPosition;
+				}
 			}
 			break;
 		}
@@ -416,6 +503,15 @@ bool CChat::HandleKeyDown( CGUIKeyEventArgs keyArgs )
 			if( IsInputVisible() )
 			{
 				// todo: move cursor position left
+				if( m_iTextCursorPosition > 0 )
+				{
+					if( keyArgs.sysKeys & CEGUI::SystemKey::Shift )
+						++m_iCountSelectedChars;
+					else
+						m_iCountSelectedChars = 0;
+
+					--m_iTextCursorPosition;
+				}
 			}
 			break;
 		}
@@ -426,37 +522,81 @@ bool CChat::HandleKeyDown( CGUIKeyEventArgs keyArgs )
 			if( IsInputVisible() )
 			{
 				// todo: move cursor position right
-			}
-			break;
-		}
-
-		/*
-	case CGUIKeys::C:
-	case CGUIKeys::X:
-		{
-			// Is the control key down and the input is visible?
-			if( (keyArgs.sysKeys & CEGUI::SystemKey::Control) && IsInputVisible () )
-			{
-				// Get the current input text
-				const char * szInput = GetInputText ();
-
-				// Do we have any input?
-				if ( strlen ( szInput ) )
+				if( m_iTextCursorPosition < m_strInput.GetLength() )
 				{
-					// Set the clipboard data
-					SharedUtility::SetClipboardText ( szInput, strlen ( szInput ) + 1 );
+					if( keyArgs.sysKeys & CEGUI::SystemKey::Shift )
+						--m_iCountSelectedChars;
+					else
+						m_iCountSelectedChars = 0;
 
-					// Are we cutting data?
-					if ( keyArgs.scancode == CGUIKeys::X )
-					{
-						// Clear the current input text
-						ClearInputText ();
-					}
+					++m_iTextCursorPosition;
 				}
 			}
 			break;
 		}
 
+	case CGUIKeys::End:
+		{
+			// Is the input visible?
+			if( IsInputVisible() )
+			{
+				if( keyArgs.sysKeys & CEGUI::SystemKey::Shift )
+				{
+					m_iCountSelectedChars = m_iTextCursorPosition - m_strInput.GetLength();
+				}
+				else
+				{
+					m_iCountSelectedChars = 0;
+				}
+				// Move cursor to end
+				m_iTextCursorPosition = m_strInput.GetLength();
+			}
+			break;
+		}
+
+	case CGUIKeys::Home:
+		{
+			// Is the input visible?
+			if( IsInputVisible() )
+			{
+				if( keyArgs.sysKeys & CEGUI::SystemKey::Shift )
+				{
+					m_iCountSelectedChars = m_iTextCursorPosition;
+				}
+				else
+				{
+					m_iCountSelectedChars = 0;
+				}
+				// Move cursor to start
+				m_iTextCursorPosition = 0;
+			}
+			break;
+		}
+		
+	/*case CGUIKeys::C:
+	case CGUIKeys::X:
+		{
+			// Is the control key down and the input is visible?
+			if( (keyArgs.sysKeys & CEGUI::SystemKey::Control) && IsInputVisible () )
+			{
+				// Do we have select text?
+				if( m_iCountSelectedChars != 0 )
+				{
+					int start = m_iTextCursorPosition + ( m_iCountSelectedChars > 0 ? 0 : m_iCountSelectedChars );
+					SharedUtility::SetClipboardText( m_strInput.substr(start, abs(m_iCountSelectedChars)), abs(m_iCountSelectedChars) + 1);
+					
+					// Are we cutting data?
+					if ( keyArgs.scancode == CGUIKeys::X )
+					{
+						// Clear the current input text
+						ClearInputText ();
+						m_iTextCursorPosition = start;
+					}
+				}
+			}
+			break;
+		}
+	
 	case CGUIKeys::V:
 		{
 			// Is the control key down and the input is visible?
@@ -468,13 +608,27 @@ bool CChat::HandleKeyDown( CGUIKeyEventArgs keyArgs )
 				// Do we have data in the clipboard?
 				if ( strlen ( szClipboard ) )
 				{
+					//Clear the select text
+					ClearSelectText();
+
 					// Update the input
-					SetInputText ( String ( "%s%s", GetInputText (), szClipboard ).Get () );
+					m_strInput.Insert(m_iTextCursorPosition, strlen( szClipboard ));
+					m_iTextCursorPosition = m_iTextCursorPosition + strlen (szClipboard) - 1;
 				}
 			}
 			break;
 		}
-		*/
+
+		case CGUIKeys::A:
+		{
+			// Is the control key down and the input is visible?
+			if( (keyArgs.sysKeys & CEGUI::SystemKey::Control) && IsInputVisible () )
+			{
+				m_iTextCursorPosition = m_strInput.GetLength();
+				m_iCountSelectedChars = -1 * m_strInput.GetLength();
+			}
+			break;
+		}*/
 	}
 
 	return true;

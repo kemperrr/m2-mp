@@ -31,8 +31,14 @@ BOOL WINAPI DllMain( HMODULE hModule, DWORD dwReason, void * pReserved )
 			pCore = new CCore;
 
 			// Did the core fail to create or initialsie?
-			if( !pCore || !pCore->Initialise() )
+			if( !pCore || !pCore->Initialise() ) 
+			{
 				TerminateProcess( GetCurrentProcess(), 0 );
+			} 
+			else 
+			{
+				CLogFile::Printf("Core initialised");
+			}
 
 			break;
 		}

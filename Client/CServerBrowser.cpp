@@ -18,10 +18,17 @@ bool CServerBrowser::Event_QuickConnectSubmitClick ( CGUIElement_Impl * pElement
 	m_iServerPort = m_pQuickConnectPort->GetText().ToInteger ();
 	m_strServerPassword = m_pQuickConnectPassword->GetText ();
 
+#ifdef DEBUG
+	CLogFile::Printf("Click to quick connect");
+	CLogFile::Printf("Multiplayer %s", pCore->IsMultiplayerStarted() ? "is started" : "isn't started");
+#endif
+
+	/* Why am I reset input text?
 	// Reset input text
 	m_pQuickConnectAddress->SetText ( "" );
 	m_pQuickConnectPort->SetText ( "" );
 	m_pQuickConnectPassword->SetText ( "" );
+	*/
 
 	// If an invalid port is set, use the default?
 	if ( m_iServerPort == 0 )
@@ -43,10 +50,12 @@ bool CServerBrowser::Event_QuickConnectSubmitClick ( CGUIElement_Impl * pElement
 
 bool CServerBrowser::Event_QuickConnectCancelClick ( CGUIElement_Impl * pElement )
 {
+	/* Why am I reset input text?
 	// Reset input text
 	m_pQuickConnectAddress->SetText ( "" );
 	m_pQuickConnectPort->SetText ( "" );
 	m_pQuickConnectPassword->SetText ( "" );
+	*/
 
 	// Hide the quick connect window
 	m_pQuickConnectWindow->SetVisible ( false );
@@ -56,7 +65,7 @@ bool CServerBrowser::Event_QuickConnectCancelClick ( CGUIElement_Impl * pElement
 bool CServerBrowser::Event_QuickConnectInputFocus ( CGUIElement_Impl * pElement )
 {
 	// Reset the element text
-	pElement->SetText ( "" );
+	//pElement->SetText ( "" );
 	return true;
 }
 
@@ -413,6 +422,10 @@ void CServerBrowser::ConnectToSelectedServer( void )
 
 void CServerBrowser::StartConnection ( void )
 {
+#ifdef DEBUG
+	//tmp
+	CLogFile::Printf("Start connection");
+#endif
 	// Are we already connected to a server?
 	if( pCore->GetNetworkModule() && pCore->GetNetworkModule()->IsConnected() )
 	{
@@ -430,7 +443,7 @@ void CServerBrowser::StartConnection ( void )
 
 		// Connect!
 		ProcessConnection ();
-	}
+	}	
 
 	// Is the game not yet loaded?
 	if( !pCore->IsGameLoaded() )
@@ -443,6 +456,12 @@ void CServerBrowser::StartConnection ( void )
 	}
 	else
 	{
+		// If multiplayer isn't started then execute multiplayer
+		if ( !pCore->IsMultiplayerStarted() )
+		{
+			pCore->StartMultiplayer();
+		}
+
 		// Move to the next step
 		m_connectionState = CONNECTION_STATE_CONNECTING;
 
@@ -455,6 +474,10 @@ void CServerBrowser::ProcessConnection( void )
 {
 	// Attempt to connect to the server
 	eNetworkResponse response = pCore->GetNetworkModule()->Connect( m_strServerIP, m_iServerPort, m_strServerPassword );
+#ifdef DEBUG
+	//tmp
+	CLogFile::Printf("Connection response: %d", (int)response);
+#endif
 
 	// Get the response string
 	String strMessage( "An unknown error occurred." );
@@ -470,7 +493,7 @@ void CServerBrowser::ProcessConnection( void )
 	}
 
 	// Show the message box
-	SetMessageBox ( ((int)response == 0 ? "Connecting" : "Failed to connect"), strMessage.Get () );
+	SetMessageBox ( (response == NETWORK_RESPONSE_SUCCESS ? "Connecting" : "Failed to connect"), strMessage.Get () );
 
 	// Did we fail to connect?
 	if( (int)response > 0 )
